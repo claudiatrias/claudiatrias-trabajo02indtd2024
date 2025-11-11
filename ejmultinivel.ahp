@@ -1,0 +1,71 @@
+Version: 2.0
+Alternatives: &alternatives
+  Madrid:
+  Sevilla:
+  Cadiz:
+  Sierra:
+Goal:
+  name: Elegir el mejor plan de ocio
+  preferences:
+    pairwise:
+      - [Coste, Diversion, 1/3]
+      - [Coste, Distancia, 3]
+      - [Diversion, Distancia, 5]
+  children:
+    Diversion:
+      preferences:
+        pairwise:
+          - [Madrid,Sevilla,1/7]
+          - [Madrid,Cadiz,1/5]
+          - [Madrid,Sierra,1/5]
+          - [Sevilla,Cadiz,3]
+          - [Sevilla,Sierra,3]
+          - [Cadiz,Sierra,1]
+      children: *alternatives
+    Coste:
+      preferences:
+        pairwise:
+          - [Transporte,Comida,1/3]
+          - [Transporte,Alojamiento,1/7]
+          - [Comida,Alojamiento,1/3]
+      children:
+        Transporte:
+          preferences:
+            pairwise:
+              - [Madrid,Sevilla,1/7]
+              - [Madrid,Cadiz,1/3]
+              - [Madrid,Sierra,1/2]
+              - [Sevilla,Cadiz,3]
+              - [Sevilla,Sierra,5]
+              - [Cadiz,Sierra,2]
+          children: *alternatives
+        Comida:
+          preferences:
+            pairwise:
+              - [Madrid,Sevilla,1/3]
+              - [Madrid,Cadiz,1/7]
+              - [Madrid,Sierra,1/7]
+              - [Sevilla,Cadiz,1/5]
+              - [Sevilla,Sierra,1/5]
+              - [Cadiz,Sierra,1]
+          children: *alternatives
+        Alojamiento:
+          preferences:
+            pairwise:
+              - [Madrid,Sevilla,1/9]
+              - [Madrid,Cadiz,1/9]
+              - [Madrid,Sierra,1/9]
+              - [Sevilla,Cadiz,1]
+              - [Sevilla,Sierra,1]
+              - [Cadiz,Sierra,1]
+          children: *alternatives
+    Distancia:
+      preferences:
+        pairwise:
+          - [Madrid,Sevilla,1/7]
+          - [Madrid,Cadiz,1/3]
+          - [Madrid,Sierra,1/2]
+          - [Sevilla,Cadiz,3]
+          - [Sevilla,Sierra,5]
+          - [Cadiz,Sierra,2]
+      children: *alternatives
