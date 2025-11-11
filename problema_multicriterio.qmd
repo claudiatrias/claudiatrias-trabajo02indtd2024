@@ -1,0 +1,630 @@
+---
+title: "Problema Multicriterio"
+subtitle: "Elección del mejor plan de ocio"
+author: "Claudia Trias de Tena"
+format:
+  typst:
+    toc: true
+    toc-title: "Índice"
+    fig-format: png
+    fig-width: 9
+    fig-height: 6
+    fig-align: 'center'
+  html: default
+editor: visual
+---
+
+\newpage
+
+# Enunciado
+
+Se desea elegir el mejor plan de ocio para realizar en un fin de semana. Se proponen las siguientes **alternativas**:
+
+(1) Viaje a Madrid: Pasar el fin de semana en la capital con amigos, que incluirá planes culturales y gastronómicos.
+
+(2) Centro de Sevilla: Pasar el domingo en el centro con amigos, con un paseo por la ciudad y una ruta de tapas por los bares más auténticos.
+
+(3) Playa de Cádiz: Pasar el sábado en alguna playa de Cádiz.
+
+(4) Ruta de senderismo por Sierra Morena.
+
+Para valorar las posibles alternativas se han definido los siguientes **criterios**:
+
+(1) Coste:
+
+-   Transporte: Los viajes a los distintos destinos se harán en coche, luego debemos considerar el gasto de la gasolina.
+
+-   Comida: Para la playa y la escapada a la sierra se plantea una comida tipo picnic, mientras que en Madrid y el centro de Sevilla se comerá en bares/restaurantes.
+
+-   Alojamiento: El gasto de alojamiento solo se considerará en Madrid, pues los otros planes se han planteado para ida y vuelta el mismo día.
+
+(2) Distancia
+
+(3) Diversión
+
+Los primeros dos criterios son de **minimizar** y el último es de **maximizar**.
+
+Con el propósito de esta valoración, se llevarán a cabo distintos **métodos de decisión multicriterio**:
+
+-   AHP
+-   Electre
+-   Promethee
+-   Axiomático de Arrow y Raymond
+
+En base a los juicios emitidos por el grupo de amigos, las **matrices de comparaciones** a pares son:
+
+\newpage
+
+```{r, echo = FALSE, message = FALSE}
+source("teoriadecision_funciones_multicriterio.R")
+library(knitr)
+```
+
+**Comparación de Criterios:**
+
+```{r, echo = FALSE}
+tb_C <- multicriterio.crea.matrizvaloraciones_mej(c(3, 1/3, 1/5),
+                                                 numalternativas =3,
+                                                 c("Coste", "Distancia",
+                                                   "Diversion"))
+knitr::kable(round(tb_C, 2))
+
+```
+
+**Criterio: Coste**
+
+```{r, echo = FALSE}
+
+tb_SC <- multicriterio.crea.matrizvaloraciones_mej(c(1/3, 1/7, 1/3),
+                                                 numalternativas =3,
+                                                 c("Trans.", "Comida",
+                                                   "Alojamiento"))
+knitr::kable(round(tb_SC, 2))
+
+```
+
+**Subcriterio: Transporte**
+
+```{r, echo = FALSE}
+
+tb_trans <- multicriterio.crea.matrizvaloraciones_mej(c(1/7, 1/3, 1/2, 3, 5, 2),
+                                                 numalternativas =4,
+                                                 c("Madrid", "Sevilla",
+                                                   "Cadiz", "Sierra"))
+knitr::kable(round(tb_trans, 2))
+
+```
+
+**Subcriterio: Comida**
+
+```{r, echo = FALSE}
+
+tb_comida <- multicriterio.crea.matrizvaloraciones_mej(c(1/3, 1/7, 1/7, 1/5, 1/5, 1),
+                                                 numalternativas =4,
+                                                 c("Madrid", "Sevilla",
+                                                   "Cadiz", "Sierra"))
+knitr::kable(round(tb_comida, 2))
+
+```
+
+**Subcriterio: Alojamiento**
+
+```{r, echo = FALSE}
+
+tb_alojamiento <- multicriterio.crea.matrizvaloraciones_mej(c(1/9, 1/9, 1/9, 1, 1, 1),
+                                                 numalternativas =4,
+                                                 c("Madrid", "Sevilla",
+                                                   "Cadiz", "Sierra"))
+knitr::kable(round(tb_alojamiento, 2))
+
+```
+
+**Criterio: Distancia**
+
+```{r, echo = FALSE}
+
+tb_diversion <- multicriterio.crea.matrizvaloraciones_mej(c(1/7, 1/3, 1/2, 3, 5, 2),
+                                                 numalternativas =4,
+                                                 c("Madrid", "Sevilla",
+                                                   "Cadiz", "Sierra"))
+knitr::kable(round(tb_diversion,2))
+
+```
+
+**Criterio: Diversión**
+
+```{r, echo = FALSE}
+
+tb_dist <- multicriterio.crea.matrizvaloraciones_mej(c(1/7, 1/5, 1/5, 3, 3, 1),
+                                                 numalternativas =4,
+                                                 c("Madrid", "Sevilla",
+                                                   "Cadiz", "Sierra"))
+knitr::kable(round(tb_dist, 2))
+
+```
+
+\newpage
+
+# METODO AHP:
+
+Se han estudiado dos vías para la resolución de un problema multicriterio por el 
+método AHP. La primera es mediante las funciones de clase y la segunda a través
+de la librería ahp de R. veamos ambas formas:
+
+## Funciones de clase:
+
+Cargamos los archivos donde están definidas las funciones que vamos a utilizar para resolver el problema multicriterio. Estos nos servirán para la implementación de
+todos los métodos que vamos a considerar.
+
+```{r, message= FALSE}
+source("teoriadecision_funciones_multicriterio.R")
+source("teoriadecision_funciones_multicriterio_diagram.R")
+source("teoriadecision_funciones_multicriterio_utiles.R")
+```
+
+Cargamos las librerías y funciones necesarias:
+
+```{r}
+
+library(formattable)
+library(htmltools)
+library(webshot)
+
+export_formattable <- function(f, file, width = "100%", height = NULL,
+background = "white", delay = 0.2)
+{
+w <- formattable::as.htmlwidget(f, width = width, height = height)
+path <- htmltools::html_print(w, background = background, viewer = NULL)
+url <- paste0("file:///", gsub("\\\\", "/", normalizePath(path)))
+webshot::webshot(url,
+file = file,
+selector = ".formattable_widget",
+delay = delay)
+}
+
+```
+
+Creamos las matrices de comparaciones y guardamos los resultados obtenidos al
+aplicar el método AHP:
+
+```{r}
+
+# Comparaciones entre los criterios:
+
+tb_C <- multicriterio.crea.matrizvaloraciones_mej(c(3, 1/3, 1/5),
+                                                 numalternativas =3,
+                                                 c("Coste", "Distancia",
+                                                   "Diversion"))
+
+res_C <- multicriterio.metodoAHP.variante3.basico(tb_C)
+
+# Comparaciones entre los subcriterios:
+
+tb_SC <- multicriterio.crea.matrizvaloraciones_mej(c(1/3, 1/7, 1/3),
+                                                 numalternativas =3,
+                                                 c("Trans.", "Comida",
+                                                   "Alojamiento"))
+
+res_SC <- multicriterio.metodoAHP.variante3.basico(tb_SC)
+
+# Transporte
+
+tb_trans <- multicriterio.crea.matrizvaloraciones_mej(c(1/7, 1/3, 1/2, 3, 5, 2),
+                                                 numalternativas =4,
+                                                 c("Madrid", "Sevilla",
+                                                   "Cadiz", "Sierra"))
+ 
+res_trans <- multicriterio.metodoAHP.variante3.basico(tb_trans) 
+
+# Comida
+
+tb_comida <- multicriterio.crea.matrizvaloraciones_mej(c(1/3, 1/7, 1/7, 1/5, 1/5, 1),
+                                                 numalternativas =4,
+                                                 c("Madrid", "Sevilla",
+                                                   "Cadiz", "Sierra"))
+  
+res_comida <- multicriterio.metodoAHP.variante3.basico(tb_comida)
+
+# Alojamiento
+
+tb_alojamiento <- multicriterio.crea.matrizvaloraciones_mej(c(1/9, 1/9, 1/9, 1, 1, 1),
+                                                 numalternativas =4,
+                                                 c("Madrid", "Sevilla",
+                                                   "Cadiz", "Sierra"))
+  
+res_alojamiento <- multicriterio.metodoAHP.variante3.basico(tb_alojamiento)
+  
+# Distancia
+
+tb_dist <- multicriterio.crea.matrizvaloraciones_mej(c(1/7,1/3,1/2,3,5,2),
+                                                 numalternativas =4,
+                                                 c("Madrid", "Sevilla",
+                                                   "Cadiz", "Sierra"))
+  
+res_dist <- multicriterio.metodoAHP.variante3.basico(tb_dist)
+  
+# Diversion
+
+tb_diversion <- multicriterio.crea.matrizvaloraciones_mej(c(1/7,1/5,1/5,3,3,1),
+                                                 numalternativas =4,
+                                                 c("Madrid", "Sevilla",
+                                                   "Cadiz", "Sierra"))
+  
+res_diversion <- multicriterio.metodoAHP.variante3.basico(tb_diversion)
+  
+```
+
+Calculamos ahora los pesos de los criterios/subcriterios con respecto a elegir 
+el mejor plan de ocio:
+
+```{r}
+
+c11 <- (as.numeric(res_C$valoraciones.ahp[1]*res_SC$valoraciones.ahp[1]))
+c12 <- (as.numeric(res_C$valoraciones.ahp[1]*res_SC$valoraciones.ahp[2]))
+c13 <- (as.numeric(res_C$valoraciones.ahp[1]*res_SC$valoraciones.ahp[3]))
+c2 <- (as.numeric(res_C$valoraciones.ahp[2]))
+c3 <- (as.numeric(res_C$valoraciones.ahp[3]))
+
+crisub = c(c11,c12,c13,c2,c3)
+
+```
+
+Agrupamos en una matriz los pesos locales de las alternativas:
+
+```{r}
+
+mat <- matrix(c(as.vector(res_trans$valoraciones.ahp),
+                as.vector(res_comida$valoraciones.ahp),
+                as.vector(res_alojamiento$valoraciones.ahp),
+                as.vector(res_dist$valoraciones.ahp),
+                as.vector(res_diversion$valoraciones.ahp)),
+              ncol = 4,
+              nrow = 5,
+              byrow = TRUE)
+```
+
+Por último, calculamos los pesos globales de cada una de las alternativas:
+
+```{r}
+
+pesos.globales = crisub %*% mat
+colnames(pesos.globales) = c("Madrid","Sevilla","Cadiz", "Sierra.M")
+knitr::kable(pesos.globales)
+
+```
+
+Por lo tanto, concluimos que la alternativa pasar el domingo en el centro de Sevilla es la óptima (con un peso global de 47% aprox.), seguida de pasar el sábado en alguna playa de Cádiz (con un peso global de 24% aprox.), una ruta de senderismo por Sierra Morena (con un peso global de 23% aprox.) y por último, la peor alternativa es pasar el fin de semana en Madrid (con un peso global de 5% aprox.).
+
+### Estudio de la inconsistencia
+
+Al tratarse de matrices 3x3 y 4x4 hay que estudiar la incosistencia.
+
+```{r}
+incons_1 = multicriterio.metodoAHP.coef.inconsistencia(tb_C)
+incons_2 = multicriterio.metodoAHP.coef.inconsistencia(tb_SC)
+incons_3 = multicriterio.metodoAHP.coef.inconsistencia(tb_trans)
+incons_4 = multicriterio.metodoAHP.coef.inconsistencia(tb_comida)
+incons_5 = multicriterio.metodoAHP.coef.inconsistencia(tb_alojamiento)
+incons_6 = multicriterio.metodoAHP.coef.inconsistencia(tb_dist)
+incons_7 = multicriterio.metodoAHP.coef.inconsistencia(tb_diversion)
+
+c(incons_1$mensaje, round(incons_1$RI.coef.inconsistencia,4))
+c(incons_2$mensaje, round(incons_2$RI.coef.inconsistencia,4))
+c(incons_3$mensaje, round(incons_3$RI.coef.inconsistencia,4))
+c(incons_4$mensaje, round(incons_4$RI.coef.inconsistencia,4))
+c(incons_5$mensaje, round(incons_5$RI.coef.inconsistencia,4))
+c(incons_6$mensaje, round(incons_6$RI.coef.inconsistencia,4))
+```
+
+\newpage
+
+## Librería AHP:
+
+Escribimos el modelo en un fichero ahp, "ejmultinivel.ahp".
+
+Cargamos el modelo
+
+```{r, message = FALSE}
+library(ahp)
+datos = Load("ejmultinivel.ahp")
+```
+
+Calculamos las prioridades
+
+```{r}
+Calculate(datos)
+print(datos, priority = function(x) x$parent$priority["Total", x$name])
+```
+
+Visualizamos la jerarquía
+
+```{r, message = FALSE}
+Visualize(datos)
+```
+
+Analizamos
+
+```{r, message = FALSE}
+aa = AnalyzeTable(datos, variable = "priority", sort="orig")
+formattable::as.htmlwidget(aa)
+```
+
+```{r, message = FALSE}
+ab = AnalyzeTable(datos, sort="orig")
+formattable::as.htmlwidget(ab)
+```
+
+Luego, concluimos que la alternativa pasar el domingo en el centro de Sevilla es la óptima (con un peso global de 47.3%), seguida de pasar el sábado en alguna playa de Cádiz (con un peso global de 24.4%), una ruta de senderismo por Sierra Morena (con un peso global de 23.1%) y por último, la peor alternativa es pasar el fin de semana en Madrid (con un peso global de 5.2%).
+
+En la primera tabla (Tabla de PESOS LOCALES) observamos que el subcriterio dentro del criterio Coste con mayor peso es Alojamiento. Dentro de este subcriterio, todas las alternativas menos Madrid tienen el mismo peso, como era de esperar, por las valoraciones otorgadas.
+
+En la primera tabla, en el subcriterio comida, las alternativas Cádiz y Sierra tienen un mayor peso, igual para ambas. El peso dentro de los criterios o subcriterios de estas dos alternativas solo difiere en el criterio distancia y transporte, teniendo un mayor peso local la alternativa Cádiz.
+
+La columna de inconsistencia nos proporciona valores menores a 10%, concluyendo así,
+que la consistencia de las matrices de comparaciones es aceptable.
+
+Los pesos usados para los siguientes métodos son los pesos globales obtenidos por 
+el método AHP.
+
+\newpage
+
+# METODO PROMETHEE:
+
+Para la resolución del problema multicriterio mediante el método promethee, 
+consideramos la siguiente matriz de decisión. Para ello, hemos tenido en cuenta 
+que todos los criterios, menos el criterio "Diversión" son de minimizar, luego
+los valores correspondientes a estos están multiplicados por menos 1.
+
+```{r, echo = FALSE}
+t = multicriterio.crea.matrizdecision(
+  c(-200,-100,-200,-550,3,
+    -5, -50, 0, -30, 7,
+    -50, -5, 0, -100, 5,
+    -70, -5, 0, -200, 5), 
+  numalternativas = 4, numcriterios = 5,
+  v.nombresalt = c("Madrid", "Sevilla", "Cadiz", "Sierra M"),
+  v.nombrescri = c("C_trans","C_com", "C_aloj","Dist", "Div"))
+
+knitr::kable(t)
+
+```
+
+Como hemos mencionado anteriormente, los pesos utilizados en este método son aquellos
+obtenidos mediante el método AHP.
+
+Además las funciones de preferencia de cada criterio son las siguientes:
+
+- Criterio Coste_Transporte --> Cuasi Criterio (q = 25)
+- Criterio Coste_Comida --> Cuasi Criterio (q = 15)
+- Criterio Coste_Alojamiento --> Cuasi Criterio (q = 20)
+- Criterio Distancia --> Criterio Nivel (q = 30, p =70 )
+- Criterio Diversión --> Criterio Nivel (q = 1, p = 3 )
+
+## Promethee I:
+
+Creamos la matriz de decisión, introducimos los pesos y las funciones de preferencia.
+
+```{r}
+
+t = multicriterio.crea.matrizdecision(
+  c(-200,-100,-200,-550,3,
+    -5, -50, 0, -30, 7,
+    -50, -5, 0, -100, 5,
+    -70, -5, 0, -200, 5), 
+  numalternativas = 4, numcriterios = 5)
+
+pesos = crisub
+tab.fpref = matrix(c( 2, 25, 0,0,
+                      2, 15, 0,0,
+                      2, 20, 0,0,
+                      4, 30,70,0,
+                      4, 1,  3,0), ncol = 4, byrow=T)
+```
+
+Resolvemos por el Metodo Promethee I:
+
+```{r, message = FALSE, fig.height=4}
+tab = multicriterio.metodo.promethee_i(t, pesos, tab.fpref)
+require("qgraph")
+qgraph(tab$tablarelacionsupera)
+```
+
+Vemos como la alternativa 2 domina al resto de alternativas y la alternativa 1 es dominada por todas las demás. Las alternativas 3 y 4 dominan y son dominadas.
+
+## Promethee II:
+
+Resolvemos por el Metodo Promethee II:
+
+```{r, fig.height=4}
+
+tab2 = multicriterio.metodo.promethee_ii(t, pesos, tab.fpref)
+require("qgraph")
+qgraph(tab2$tablarelacionsupera)
+```
+
+La ordenación final de las alternativas es:
+
+```{r}
+
+order(tab2$vflujos.netos, decreasing= T)
+
+```
+
+Se observa que, mediante el método Promethee II (de ordenación total), la alternativa óptima es la 2 (Pasar el doming en el centro de Sevilla), seguido de la alternativa 3 (Pasar el día en alguna playa de Cádiz), la alternativa 4 (Ruta de senderismo por Sierra Morena) y, por último, se concluye, que la peor alternativa es la 1 (Pasar el finde en Madrid).
+
+## Resolución con Promethee Windows:
+
+```{r}
+res = multicriterio.metodo.promethee_windows(t, tab.fpref, round(pesos,4), 
+                                             fminmax = c("min", "min","min", "min","max"))
+knitr::kable(res$Escenario)
+```
+
+Vemos los flujos entrantes, salientes y netos ordenados según las alternativas 
+óptimas. 
+
+```{r}
+knitr::kable(res$Acciones, align = c('c','c','c','c'))
+```
+
+\newpage
+
+# METODO ELECTRE:
+
+Para la resolución del problema multicriterio mediante el método Electre, vamos a
+hacer uso de la matriz de decisión considerada para el método Promethee, así como
+de los pesos.
+
+```{r}
+
+t = multicriterio.crea.matrizdecision(
+  c(-200,-100,-200,-550,3,
+    -5, -50, 0, -30, 7,
+    -50, -5, 0, -100, 5,
+    -70, -5, 0, -200, 5), 
+  numalternativas = 4, numcriterios = 5)
+
+pesos = crisub
+d = c(100, 20, Inf, Inf, 2)
+```
+
+Resolvemos mediante el Método Electre:
+
+```{r}
+
+sol1 = multicriterio.metodoELECTRE_I(t, pesos.criterios = pesos,
+                                     nivel.concordancia.minimo.alpha = 0.7,
+                                     no.se.compensan = d,
+                                     que.alternativas = TRUE)
+
+qgraph::qgraph(sol1$relacion.dominante)
+
+```
+La alternativa 1 es dominada por todas. La alternativa 4 domina a la alternativa 1
+y es dominada por la alternativa 3.
+
+En la primera iteración, se tiene que el núcleo (conjunto de alternativas que 
+dominan al resto y no son dominadas por nadie) es:
+
+```{r}
+sol1$nucleo_aprox
+```
+
+Aplicamos el método Electre a las alternativas del núcleo:
+
+```{r, fig.height= 4}
+sol2 = multicriterio.metodoELECTRE_I(t, pesos.criterios = pesos,
+                                     nivel.concordancia.minimo.alpha = 0.7,
+                                     no.se.compensan = d,
+                                     que.alternativas = c(2,3))
+
+qgraph::qgraph(sol2$relacion.dominante)
+
+```
+
+Reducimos el valor de alpha a 0.55:
+
+```{r, fig.height= 4}
+sol3 = multicriterio.metodoELECTRE_I(t, pesos.criterios = pesos,
+                                     nivel.concordancia.minimo.alpha = 0.55,
+                                     no.se.compensan = d,
+                                     que.alternativas = c(2,3))
+
+qgraph::qgraph(sol3$relacion.dominante)
+
+```
+
+Por último, modificamos d:
+
+```{r, fig.height= 4}
+sol4 = multicriterio.metodoELECTRE_I(t, pesos.criterios = pesos,
+                                     nivel.concordancia.minimo.alpha = 0.55,
+                                     no.se.compensan = c(50, 10, Inf, Inf, 4),
+                                     que.alternativas = c(2,3))
+
+qgraph::qgraph(sol4$relacion.dominante)
+
+```
+Tras haber probado para distintos valores de d y no llegar a una única alternativa,
+concluimos con este método que las dos alternativas óptimas son "Pasar el domingo 
+en el Centro de Sevilla" y "Pasar el sábado en alguna playa de Cádiz". No podemos
+concluir el dominio de una de estas dos alternativas sobre la otra.
+
+## Tablas de Concordancia, Discordancia y Superación:
+
+Veamos las tablas de concordancia y discordancia para la primera iteración.
+
+```{r, message = FALSE}
+s1 = func_ELECTRE_resTConcordancia(sol1)
+kableExtra::save_kable(s1$KE, file = "electreTConc.html")
+webshot2::webshot("electreTConc.html", file = "electreTConc.png")
+```
+
+Vemos por ejemplo que (a2,a3) y (a2,a4) han superado el test de concordancia.
+
+```{r, message = FALSE}
+s2 = func_ELECTRE_resTDiscordancia(sol1)
+kableExtra::save_kable(s2$KE, file = "electreTDisc.html")
+webshot2::webshot("electreTDisc.html", file = "electreTDisc.png")
+```
+Vemos como los pares que hemos mencionado para la concordancia, no han superado 
+el test de discordancia.
+
+Para estudiar los pares de alternativas que han superado ambos tests, nos fijamos
+en la siguiente tabla:
+
+```{r, message = FALSE}
+s3 = func_ELECTRE_resTSuperacion(sol1)
+kableExtra::save_kable(s3$KE, file = "electreTSup.html")
+webshot2::webshot("electreTSup.html", file = "electreTSup.png")
+```
+
+Observamos que los pares de alternativas (con la primera dominando la segunda) 
+que han superado ambos tests son:
+(a2,a1), (a3, a1), (a4, a1), (a3,a4).
+Esto también lo hemos visto en el primer grafo, donde el arco de un nodo a otro,
+indica el dominio del nodo saliente sobre el entrante.
+
+\newpage
+
+# METODO AXIOMATICO DE ARROW Y RAYMOND
+
+Para este método consideramos la misma matriz de decisión que la de los métodos 
+Promethee y Electre.
+
+Implementamos el método:
+
+```{r}
+sol = multicriterio.metodoaxiomatico.ArrowRaymond(t)
+```
+
+Las iteraciones/pasos del método son:
+
+```{r}
+sol$pasos
+```
+
+Una vez hemos visto todas las iteraciones, vemos las alternativas ordenadas:
+
+```{r}
+sol$alternativasordenadas
+```
+De manera que la alternativa óptima segundo este método es la 2, "Pasar el domingo en 
+el centro de Sevilla", seguida de la alternativa 3 y 4 y, concluyendo que la peor
+alternativa es "Pasar el fin de semana en Madrid".
+
+\newpage
+
+# Conclusión Final
+
+Tras haber aplicado los distintos métodos estudiados en clase para nuestro problema 
+de decisión multicriterio, en el que teníamos que elegir el mejor plan para un 
+fin de semana, podemos concluir que "Pasar el domingo en el Centro de Sevilla" es 
+elegida como la alternativa óptima según la mayoría de los métodos.
+
+A pesar de esto, en el método Electre no hemos podido obtener una relación de 
+dominio entre las alternativas "Pasar el domingo en el Centro de Sevilla" y "Pasar 
+el sábado en alguna playa de Cádiz".
+
+Por último, recalcar que la alternativa "Pasar el fin de semana en Madrid" ha sido
+elegida como la peor alternativa según todos los métodos utilizados.
